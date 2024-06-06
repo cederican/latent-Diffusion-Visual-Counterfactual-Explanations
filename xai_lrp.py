@@ -40,7 +40,7 @@ def visualize_attr(attr, norm='abs', clamp_neg=False, aggregate_channels='sum', 
       if show:
           plt.imshow(attr_img, cmap=cmap, vmin=0, vmax=1)
           if text: plt.title(text)
-          plt.show()
+          #plt.show()
 
 
       return attr_img
@@ -56,9 +56,9 @@ def show_attributions(path, attrs, title=None, **kwargs):
         ax.set_title(title)
     
     fig.savefig(f'{path}/xai_{title}.png', dpi=200, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
-    plt.show()
+    #plt.show()
 
 def xai_zennit(model, x, RuleComposite, device, target=None):
   # the model does not require special implementations to be Explainable
