@@ -1,7 +1,7 @@
 class CLSConfig():
-    run_name: str = 'DiffAECLS-06.01-VGG16'
-    architecture: str = 'vgg16' # or 'linear' or vgg16
-    batch_size: int = 32
+    run_name: str = 'DiffAECLS-06.02-RESNET50'
+    architecture: str = 'res50' # or 'linear' or vgg16
+    batch_size: int = 64
     epochs: int = 2
     lr: float = 1e-4
     weight_decay: float = 0.01

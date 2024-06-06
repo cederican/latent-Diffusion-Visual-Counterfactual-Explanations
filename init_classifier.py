@@ -9,6 +9,7 @@ import wandb
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
+import torchvision.models as models
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import *
@@ -19,72 +20,20 @@ from diffusers import VQModel
 from data.dataset import *
 from init_config import CLSConfig
 
-class VGG16Classifier(pl.LightningModule):
-    
+class ResNet50Classifier(pl.LightningModule):
     def __init__(self, num_classes):
-        super(VGG16Classifier, self).__init__()
+        super(ResNet50Classifier, self).__init__()
+
+        # Initialize the ResNet50 model
+        self.resnet50 = models.resnet50(pretrained=True)
         
-        self.features = nn.Sequential(
-            # Block 1
-            nn.Conv2d(3, 64, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            
-            # Block 2
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            
-            # Block 3
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            
-            # Block 4
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            
-            # Block 5
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-        )
+        # Modify the last fully connected layer to match the number of classes
+        num_features = self.resnet50.fc.in_features
+        self.resnet50.fc = nn.Linear(num_features, num_classes)
         
-        self.classifier = nn.Sequential(
-            nn.Linear(512 * 8 * 8, 4096),
-            nn.ReLU(inplace=True),
-            nn.Dropout(),
-            nn.Linear(4096, 4096),
-            nn.ReLU(inplace=True),
-            nn.Dropout(),
-            nn.Linear(4096, num_classes),
-        )
-             
     def forward(self, x):
-        x = self.features(x)
-        B, C, W, H = x.size()
-        size = C * W * H
-        x = x.view(-1, size)
-        x = self.classifier(x)
-        return x
-    
+        return self.resnet50(x)
+
     def training_step(self, batch, batch_idx):
         imgs = batch['img']
         labels = batch['labels']
@@ -133,13 +82,13 @@ class VGG16Classifier(pl.LightningModule):
 
         for image, global_img_index, gt_misclassified in zip(imgs[wrong_indices_per_class], wrong_global_img_indexs, gt_from_misclassified):
             # Convert tensor to numpy array and then to PIL Image
-            if global_img_index.item() < 28000:
+            if global_img_index.item() < 30000:
                 image_tensor = (image + 1) / 2
                 image_array = image_tensor.permute(1, 2, 0).cpu().numpy()
                 image_pil = Image.fromarray((image_array * 255).astype(np.uint8))
 
                 # Define the image filename
-                image_filename = os.path.join("/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_VGG16", f"{global_img_index}_{gt_misclassified}_misclassified.png")
+                image_filename = os.path.join("/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_RESNET50", f"{global_img_index}_{gt_misclassified}_misclassified.png")
 
                 # Save the image as a PNG file
                 image_pil.save(image_filename)
@@ -150,7 +99,7 @@ class VGG16Classifier(pl.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=config.lr, weight_decay=config.weight_decay)   
+        return torch.optim.Adam(self.parameters(), lr=config.lr, weight_decay=config.weight_decay)  
 
 class VQVAEClassifier(pl.LightningModule):
     
@@ -356,9 +305,9 @@ def trainCLS(
         #vqvae.to(config.devices)
         model = VQVAEClassifier(num_cls)
         #model.to(config.devices)
-    elif config.architecture == 'vgg16':
+    elif config.architecture == 'res50':
         #vqvae.to(config.devices)
-        model = VGG16Classifier(num_cls)
+        model = ResNet50Classifier(num_cls)
         #model.to(config.devices)
     else:
         print("Sorry, model architecture not implemented!")
