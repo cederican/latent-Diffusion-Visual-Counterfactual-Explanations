@@ -3,10 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from zennit.composites import LayerMapComposite
-from zennit.rules import Epsilon, ZPlus, Pass
-
-
 def visualize_attr(attr, norm='abs', clamp_neg=False, aggregate_channels='sum', cmap='seismic', text=None, color_level=0.9, show=False):
       # expects a tensor attr of shape (C x H x W), ie one value per voxel.
 
@@ -54,7 +50,7 @@ def show_attributions(path, attrs, title=None, **kwargs):
       ax.axis('off')
       if i == 0 and title:
         ax.set_title(title)
-    
+
     fig.savefig(f'{path}/xai_{title}.png', dpi=200, bbox_inches='tight')
     plt.close(fig)
 

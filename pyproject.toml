@@ -1,0 +1,10 @@
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W"]
+ignore = ["E203"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_third_party = ["django", "flask"]
+skip = ["migrations"]

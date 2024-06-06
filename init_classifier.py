@@ -1,5 +1,3 @@
-
-import matplotlib.pyplot as plt
 import PIL
 import datetime
 import os
@@ -12,12 +10,12 @@ from torch.utils.data import DataLoader, Subset
 import torchvision.models as models
 
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import *
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 
 from diffusers import VQModel
 
-from data.dataset import *
+from data.dataset import CelebHQAttrDataset
 from init_config import CLSConfig
 
 class ResNet50Classifier(pl.LightningModule):
@@ -26,11 +24,11 @@ class ResNet50Classifier(pl.LightningModule):
 
         # Initialize the ResNet50 model
         self.resnet50 = models.resnet50(pretrained=True)
-        
+
         # Modify the last fully connected layer to match the number of classes
         num_features = self.resnet50.fc.in_features
         self.resnet50.fc = nn.Linear(num_features, num_classes)
-        
+
     def forward(self, x):
         return self.resnet50(x)
 
@@ -44,7 +42,7 @@ class ResNet50Classifier(pl.LightningModule):
         loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
         self.log('loss/training', loss)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         imgs = batch['img']
         labels = batch['labels']
@@ -55,7 +53,7 @@ class ResNet50Classifier(pl.LightningModule):
         loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
         self.log('loss/validation', loss)
         return loss
-    
+
     def test_step(self, batch, batch_idx):
         imgs = batch['img']
         indexs = batch['index']
@@ -85,7 +83,7 @@ class ResNet50Classifier(pl.LightningModule):
             if global_img_index.item() < 30000:
                 image_tensor = (image + 1) / 2
                 image_array = image_tensor.permute(1, 2, 0).cpu().numpy()
-                image_pil = Image.fromarray((image_array * 255).astype(np.uint8))
+                image_pil = PIL.Image.fromarray((image_array * 255).astype(np.uint8))
 
                 # Define the image filename
                 image_filename = os.path.join("/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_RESNET50", f"{global_img_index}_{gt_misclassified}_misclassified.png")
@@ -95,21 +93,21 @@ class ResNet50Classifier(pl.LightningModule):
 
         images = [wandb.Image(image, caption=f"Idx: {str(global_img_index)}, gt: {str(gt_misclassified)}") for image, global_img_index, gt_misclassified in zip(imgs[wrong_indices_per_class], wrong_global_img_indexs, gt_from_misclassified)]
         wandb.log({"misclassified images": images})
-        
+
         return loss
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=config.lr, weight_decay=config.weight_decay)  
 
 class VQVAEClassifier(pl.LightningModule):
-    
+
     def __init__(self, num_classes):
         super(VQVAEClassifier, self).__init__()
 
         self.vqvae = VQModel.from_pretrained("CompVis/ldm-celebahq-256", subfolder="vqvae")
-    
+
         self.fc1 = nn.Linear(3*64*64, num_classes)
-             
+
     def forward(self, x):
         z = self.vqvae.encode(x).latents
         B, C, W, H = z.size()
@@ -117,7 +115,7 @@ class VQVAEClassifier(pl.LightningModule):
         z = z.view(-1, size)
         z = self.fc1(z)
         return z
-    
+
     def training_step(self, batch, batch_idx):
         imgs = batch['img']
         labels = batch['labels']
@@ -128,7 +126,7 @@ class VQVAEClassifier(pl.LightningModule):
         loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
         self.log('loss/training', loss)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         imgs = batch['img']
         labels = batch['labels']
@@ -139,7 +137,7 @@ class VQVAEClassifier(pl.LightningModule):
         loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
         self.log('loss/validation', loss)
         return loss
-    
+
     def test_step(self, batch, batch_idx):
         imgs = batch['img']
         indexs = batch['index']
@@ -169,7 +167,7 @@ class VQVAEClassifier(pl.LightningModule):
             if global_img_index.item() < 30000:
                 image_tensor = (image + 1) / 2
                 image_array = image_tensor.permute(1, 2, 0).cpu().numpy()
-                image_pil = Image.fromarray((image_array * 255).astype(np.uint8))
+                image_pil = PIL.Image.fromarray((image_array * 255).astype(np.uint8))
 
                 # Define the image filename
                 image_filename = os.path.join("/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_VQVAE", f"{global_img_index}_{gt_misclassified}_misclassified.png")
@@ -179,26 +177,26 @@ class VQVAEClassifier(pl.LightningModule):
 
         images = [wandb.Image(image, caption=f"Idx: {str(global_img_index)}, gt: {str(gt_misclassified)}") for image, global_img_index, gt_misclassified in zip(imgs[wrong_indices_per_class], wrong_global_img_indexs, gt_from_misclassified)]
         wandb.log({"misclassified images": images})
-        
+
         return loss
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=config.lr, weight_decay=config.weight_decay)   
 
 class LinearClassifier(pl.LightningModule):
-    
+
     def __init__(self, input_dim, num_classes):
         super(LinearClassifier, self).__init__()
 
         self.input_size = (lambda size: size[0] * size[1] * size[2])(input_dim)
-        
+
         self.fc1 = nn.Sequential(
             nn.Dropout(0.5),
             nn.Linear(self.input_size, 1024),
             nn.ReLU())
         self.fc2= nn.Sequential(
             nn.Linear(1024, num_classes))
-   
+
     def forward(self, x):
         B, C, W, H = x.size()
         size = C * W * H
@@ -206,7 +204,7 @@ class LinearClassifier(pl.LightningModule):
         x = self.fc1(x)
         x = self.fc2(x)
         return x
-    
+
     def training_step(self, batch, batch_idx):
         imgs = batch['img']
         labels = batch['labels']
@@ -217,7 +215,7 @@ class LinearClassifier(pl.LightningModule):
         loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
         self.log('loss/training', loss)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         imgs = batch['img']
         labels = batch['labels']
@@ -228,7 +226,7 @@ class LinearClassifier(pl.LightningModule):
         loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
         self.log('loss/validation', loss)
         return loss
-    
+
     def test_step(self, batch, batch_idx):
         imgs = batch['img']
         indexs = batch['index']
@@ -258,7 +256,7 @@ class LinearClassifier(pl.LightningModule):
             if global_img_index.item() < 28000:
                 image_tensor = (image + 1) / 2
                 image_array = image_tensor.permute(1, 2, 0).cpu().numpy()
-                image_pil = Image.fromarray((image_array * 255).astype(np.uint8))
+                image_pil = PIL.Image.fromarray((image_array * 255).astype(np.uint8))
 
                 # Define the image filename
                 image_filename = os.path.join("/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_LinearCls", f"{global_img_index}_{gt_misclassified}_misclassified.png")
@@ -268,7 +266,7 @@ class LinearClassifier(pl.LightningModule):
 
         images = [wandb.Image(image, caption=f"Idx: {str(global_img_index)}, gt: {str(gt_misclassified)}") for image, global_img_index, gt_misclassified in zip(imgs[wrong_indices_per_class], wrong_global_img_indexs, gt_from_misclassified)]
         wandb.log({"misclassified images": images})
-        
+
         return loss
 
     def configure_optimizers(self):
@@ -281,7 +279,7 @@ def trainCLS(
         config,
         data,
         num_cls,
-): 
+):
     train_size = int(0.8 * len(data))
     val_size = int(0.1 * len(data))
     test_size = len(data) - train_size - val_size
@@ -297,7 +295,7 @@ def trainCLS(
     print("Train set size:", len(train_dataset))
     print("Validation set size:", len(val_dataset))
     print("Test set size:", len(test_dataset))
-    
+
     if config.architecture == 'linear':
         model = LinearClassifier(data[0]['img'].shape, num_cls)
         #model.to(config.devices)
@@ -313,7 +311,7 @@ def trainCLS(
         print("Sorry, model architecture not implemented!")
 
     wandb.log({'total_parameters': count_parameters(model)})
-    
+
     current_time = datetime.datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     ckpt_callback = ModelCheckpoint(
@@ -339,11 +337,11 @@ def trainCLS(
     )
     trainer.fit(model, train_loader, val_loader)
     trainer.test(model, test_loader)
-    
+
     return trainer.checkpoint_callback.best_model_path
-    
+
 def main(config, data, num_cls):
-    
+
     wandb_config = {
     "run_name": config.run_name,
     "architecture": config.architecture,
@@ -357,10 +355,10 @@ def main(config, data, num_cls):
     best_model_path = trainCLS(config, data, num_cls)
     print(best_model_path)
     wandb.finish()
-    
+
 
 if __name__ == "__main__":
-    
+
     config = CLSConfig()
     data_path = '/home/dai/GPU-Student-2/Cederic/pjds_group8/datasets/celebahq256.lmdb'
     attr_path = '/home/dai/GPU-Student-2/Cederic/pjds_group8/datasets/celeba_anno/CelebAMask-HQ-attribute-anno.txt'
@@ -373,5 +371,5 @@ if __name__ == "__main__":
     #ax[0].imshow(data[29996]['img'].permute(1, 2, 0).cpu())
     #ax[1].imshow(data[29996]['label'].permute(1, 2, 0).cpu())
     #plt.show()
-    
+
     main(config, data, num_cls)
