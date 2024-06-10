@@ -163,5 +163,5 @@ class CelebHQAttrDataset(Dataset):
 
         if self.transform is not None:
             img = self.transform(img)
-        #return {'img': img, 'index': index, 'labels': torch.tensor(labels)}
-        return {img, torch.tensor(labels)}
+        return {'img': img, 'index': index, 'labels': torch.tensor(labels)}
+        #return {img, torch.tensor(labels)}

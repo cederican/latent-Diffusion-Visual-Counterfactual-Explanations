@@ -8,6 +8,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
 import torchvision.models as models
+from transformers import ViTForImageClassification, ViTFeatureExtractor
+
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -17,6 +19,80 @@ from diffusers import VQModel
 
 from data.dataset import CelebHQAttrDataset
 from init_config import CLSConfig
+
+
+class ViTClassifier(pl.LightningModule):
+    def __init__(self, num_classes):
+        super(ViTClassifier, self).__init__()
+
+        # Initialize the ViT model
+        self.vit = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224', num_labels=num_classes, ignore_mismatched_sizes=True)
+        self.feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
+
+    def forward(self, x):
+        return self.vit(x).logits
+
+    def training_step(self, batch, batch_idx):
+        imgs = batch['img']
+        labels = batch['labels']
+        pred = self(imgs)
+        gt = torch.where(labels > 0, torch.ones_like(labels).float(), torch.zeros_like(labels).float())
+        loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
+        self.log('loss/training', loss)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        imgs = batch['img']
+        labels = batch['labels']
+        pred = self(imgs)
+        gt = torch.where(labels > 0, torch.ones_like(labels).float(), torch.zeros_like(labels).float())
+        loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
+        self.log('loss/validation', loss)
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        imgs = batch['img']
+        indexs = batch['index']
+        labels = batch['labels']
+        pred = self(imgs)
+        gt = torch.where(labels > 0, torch.ones_like(labels).float(), torch.zeros_like(labels).float())
+        loss = nn.functional.binary_cross_entropy_with_logits(pred, gt)
+
+        # Calculate accuracy
+        preds_binary = torch.sigmoid(pred) > 0.5
+        correct = torch.sum(preds_binary == gt)
+        accuracy = correct.item() / torch.numel(gt)
+
+        # Get the wrong classified images per class
+        wrong_indices = torch.nonzero(preds_binary != gt, as_tuple=True)
+        wrong_indices_per_class = wrong_indices[0][wrong_indices[1] == CelebHQAttrDataset.cls_to_id['Smiling']]  # Look up in the id_to_cls from dataset
+        gt_from_misclassified = [gt[wrong_indices_per_class][i][CelebHQAttrDataset.cls_to_id['Smiling']].item() for i in range(len(wrong_indices_per_class))]
+        wrong_global_img_indexs = indexs[wrong_indices_per_class]
+
+        self.log('loss/testing', loss)
+        self.log('accuracy/testing', accuracy)
+
+        for image, global_img_index, gt_misclassified in zip(imgs[wrong_indices_per_class], wrong_global_img_indexs, gt_from_misclassified):
+            # Convert tensor to numpy array and then to PIL Image
+            if global_img_index.item() < 30000:
+                image_tensor = (image + 1) / 2
+                image_array = image_tensor.permute(1, 2, 0).cpu().numpy()
+                image_pil = PIL.Image.fromarray((image_array * 255).astype(np.uint8))
+
+                # Define the image filename
+                image_filename = os.path.join("/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_VIT", f"{global_img_index}_{gt_misclassified}_misclassified.png")
+
+                # Save the image as a PNG file
+                image_pil.save(image_filename)
+
+        images = [wandb.Image(image, caption=f"Idx: {str(global_img_index)}, gt: {str(gt_misclassified)}") for image, global_img_index, gt_misclassified in zip(imgs[wrong_indices_per_class], wrong_global_img_indexs, gt_from_misclassified)]
+        wandb.log({"misclassified images": images})
+
+        return loss
+
+    def configure_optimizers(self):
+        return torch.optim.Adam(self.parameters(), lr=config.lr, weight_decay=config.weight_decay)
+
 
 class ResNet50Classifier(pl.LightningModule):
     def __init__(self, num_classes):
@@ -298,15 +374,13 @@ def trainCLS(
 
     if config.architecture == 'linear':
         model = LinearClassifier(data[0]['img'].shape, num_cls)
-        #model.to(config.devices)
     elif config.architecture == 'vqvae':
-        #vqvae.to(config.devices)
         model = VQVAEClassifier(num_cls)
-        #model.to(config.devices)
     elif config.architecture == 'res50':
-        #vqvae.to(config.devices)
         model = ResNet50Classifier(num_cls)
-        #model.to(config.devices)
+    elif config.architecture == 'vit':
+        model = ViTClassifier(num_cls)
+        
     else:
         print("Sorry, model architecture not implemented!")
 
@@ -362,7 +436,7 @@ if __name__ == "__main__":
     config = CLSConfig()
     data_path = '/home/dai/GPU-Student-2/Cederic/pjds_group8/datasets/celebahq256.lmdb'
     attr_path = '/home/dai/GPU-Student-2/Cederic/pjds_group8/datasets/celeba_anno/CelebAMask-HQ-attribute-anno.txt'
-    image_size = 256
+    image_size = 224
     original_resolution = 256
     num_cls = len(CelebHQAttrDataset.id_to_cls)
 

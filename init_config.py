@@ -1,9 +1,9 @@
 class CLSConfig():
 
-    run_name: str = 'DiffAECLS-06.02-RESNET50'
-    architecture: str = 'res50' # or 'linear' or vgg16
-    batch_size: int = 64
-    epochs: int = 2
+    run_name: str = 'DiffAECLS-06.08-ViT'
+    architecture: str = 'vit' # or 'linear' or 'res50
+    batch_size: int = 128
+    epochs: int = 4
     lr: float = 1e-4
     weight_decay: float = 0.01
     devices: list = [0]
