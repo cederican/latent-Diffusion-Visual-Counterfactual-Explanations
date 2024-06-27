@@ -11,3 +11,4 @@ data_output_test/
 *.ckpt
 *.gif
 *.npy
+*.csv
