@@ -48,8 +48,8 @@ def show_attributions(path, attrs, title=None, **kwargs):
       ax = axes[0,i]
       ax.imshow(visualize_attr(attrs[i].cpu(), **kwargs))
       ax.axis('off')
-      if i == 0 and title:
-        ax.set_title(title)
+      #if i == 0 and title:
+      #  ax.set_title(title)
 
     fig.savefig(f'{path}/xai_{title}.png', dpi=200, bbox_inches='tight')
     plt.close(fig)
