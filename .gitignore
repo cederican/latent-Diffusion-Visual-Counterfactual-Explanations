@@ -1,6 +1,13 @@
-data/
+data/misclsData_gt0
+data/misclsData_gt1
+data/misclsData_RESNET50
+data_output_bad_linear/
+data_output_bad_res/
+data_output_Smiling_CRP/
+data_output_Smiling_Linear/
+data_output_Smiling_ResNet50/
+data_output_test/
 *.pyc
 *.ckpt
-*.png
 *.gif
 *.npy
