@@ -27,7 +27,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/othneildrew/Best-README-Template">
-    <img src="/home/dai/GPU-Student-2/Cederic/DataSciPro/logos/headlineImage.png" alt="Logo" width="576" height="241">
+    <img src="logos/headlineImage.png" alt="Logo" width="576" height="241">
   </a>
 
   <h3 align="center">Diffusion Visual Counterfactual Explanations <br> & <br> Human Relevance Heatmaps</h3>
