@@ -92,7 +92,7 @@ To get a local copy follow these simple steps.
 
 * clone the repo
    ```sh
-   git clone https://github.com/cederican/DataSciPro.git
+   git clone https://github.com/cederican/Diffusion-Visual-Counterfactual-Explanations.git
    ```
 
 ### Prerequisites
