@@ -178,10 +178,7 @@ from [Checkpoints](https://tubcloud.tu-berlin.de/s/iWoFaXpzzkrXJQF)
 
 Or you can train the classifiers by yourself, therefore you do not need the .ckpt files
 
-* make sure you downloaded the provided CelebA datasets
-   ```sh
-   some TUB Cloud Link!!!!!!!!
-   ```
+* make sure you downloaded the provided CelebA datasets from [Image Data](https://tubcloud.tu-berlin.de/s/sjMbBqHMPPJfExg), [Label Data](https://tubcloud.tu-berlin.de/s/zNnJDzwFTCYPx49)
 
 * change the data_path and the attr_path in train_classifier.py
    ```sh
