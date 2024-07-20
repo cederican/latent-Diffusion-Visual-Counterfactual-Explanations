@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
-
+import cv2
 
 # Read the CSV file
-file_path = '/home/dai/GPU-Student-2/Cederic/DataSciPro/study/studyentries.csv'
+file_path = '/home/dai/GPU-Student-2/Cederic/DataSciPro/study/studyentries-final.csv'
 df = pd.read_csv(file_path)
 print('Done reading file')
 
@@ -23,13 +22,10 @@ def evaluate_Selection(df: pd.DataFrame):
     all_columns = df.columns
     desired_columns = [col for col in all_columns if "ImageSelection" in col and "selection" in col]
     print('\033[35m' +'Columns evaluated for the image selection task: ' + str(desired_columns) + '\033[0m')
-
     user_selection_lst = [] # list[df.list]; every user has a list of selected images
     image_selection_lst = [] # list[str]; data of selected images
-
     for user in range(df.shape[0]):
         user_selection_data = df.iloc[user][desired_columns]
-
         # Check for outliers
         mean = mean_for_outliers(desired_columns, user_selection_data)
         print('\033[34m' + 'Mean of user ' + str(user) + ': ' + str(round(mean, 3)) + '\033[0m')
@@ -37,10 +33,7 @@ def evaluate_Selection(df: pd.DataFrame):
             print('\033[31m' + 'User ' + str(user) + ' is an outlier' + '\033[0m')
             continue
         user_selection_lst.append(user_selection_data)
-
     print('\033[32m' + 'Total number of valid users: ' + str(len(user_selection_lst)) + '\033[0m')
-
-    
     for column in desired_columns:
         image_selection = []
         for user in range(len(user_selection_lst)):
@@ -54,28 +47,26 @@ def plot_histogram(image_selection_lst, which_image, output_path):
     fig, ax = plt.subplots(figsize=(10, 6))
     num_bins =  range(min(image_selection_lst[which_image]), (max(image_selection_lst[which_image]))+2)
     n, bins, patches = ax.hist(image_selection_lst[which_image], bins=num_bins, edgecolor='white', linewidth=1)
-    # Farben festlegen
+    # colour the bars
     for i, patch in enumerate(patches):
         plt.setp(patch, 'facecolor', plt.cm.gist_heat(i / len(patches)))
-    # Balkenbeschriftungen hinzufügen
+    # annotate the bars
     for i in range(len(patches)):
         ax.text(patches[i].get_x() + patches[i].get_width() / 2, patches[i].get_height() + 0.1, 
                 str(int(patches[i].get_height())), ha='center', fontsize=12, color='black')
-    # Beschriftungen und Titel hinzufügen
-    ax.set_title('Histogram of \'human assumed\' classifier switch', fontsize=20, pad=20)
-    ax.set_xlabel('chosen image', fontsize=15, labelpad=15)
+    # title and labels
+    ax.set_title('histogram of \'human assumed\' classifier switch', fontsize=20, pad=20)
+    ax.set_xlabel('image number', fontsize=15, labelpad=15)
     ax.set_ylabel('number of participants\nchosen this image', fontsize=15, labelpad=15)
 
-    ax.set_xticks(bins[:-1] + 0.5)  # Setzt die Ticks in die Mitte der Balken
-    ax.set_xticklabels([str(int(tick)) for tick in bins[:-1]])  # Beschriftungen anpassen
+    ax.set_xticks(bins[:-1] + 0.5)
+    ax.set_xticklabels([str(int(tick)) for tick in bins[:-1]])
 
-    # Achsenbegrenzungen setzen
     ax.set_xlim(bins[0], bins[-1])
     ax.set_ylim(0, max(n) + 1)
-    # Grid und Hintergrund einstellen
+
     ax.grid(True, linestyle='--', alpha=0.7)
     ax.set_facecolor('#f0f0f0')
-    # Layout anpassen und Plot anzeigen
 
     custom_text = f'-1: \'none is smiling\'\n0-{max(image_selection_lst[which_image])}: image number'
     plt.text(0.95, 0.95, custom_text, transform=ax.transAxes, fontsize=12,
@@ -83,15 +74,14 @@ def plot_histogram(image_selection_lst, which_image, output_path):
              bbox=dict(facecolor='white', alpha=0.5))
 
     plt.tight_layout()
-    plt.savefig(output_path)
-    plt.close(fig)
+    if output_path is not None:
+        plt.savefig(output_path)
     #plt.show()
+    plt.close(fig)
 
 
 # ------------------ Evaluate the Annotation Task ------------------
-def visualize_mask(mask_array: np.ndarray, image_path: str, num_of_participants: int, output_path: str):
-    import matplotlib.pyplot as plt
-    import cv2
+def visualize_mask(mask_array: np.ndarray, image_path: str, num_of_participants: int, output_path: str = None):
 
     image = cv2.imread(image_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
@@ -101,32 +91,31 @@ def visualize_mask(mask_array: np.ndarray, image_path: str, num_of_participants:
     cmap = 'gist_heat_r'
 
     ax.imshow(image, interpolation='nearest')
-    ax.imshow(mask, cmap=cmap, alpha=0.5, interpolation='nearest')
+    masked_image = ax.imshow(mask, cmap=cmap, alpha=0.5, interpolation='nearest', vmin=0, vmax=57)
+
+    cbar = plt.colorbar(masked_image, ax=ax)
+    cbar.set_ticks(np.linspace(0, 56, num=8))
+    cbar.set_label('relevance score', rotation=270, labelpad=15)
     
     plt.title(f'human relevance heatmap\n of all (N = {num_of_participants}) participants')
-    plt.colorbar(ax.imshow(mask, cmap=cmap, alpha=0.5, interpolation='nearest'))
-    plt.axis('off')  # Turn off the axis
-    plt.savefig(output_path)
-    plt.close(fig)
+    plt.axis('off')
+    plt.rcParams['figure.dpi'] = 200
+    if output_path is not None:
+        plt.savefig(output_path)
     #plt.show()
+    plt.close(fig)
 
 def create_mask(polygons: list, image_shape: tuple):
-    import numpy as np
-    import cv2
 
     # returns a mask with the polygons filled as 1s all others are 0s
-
     mask = np.zeros(image_shape, dtype=np.uint8)
     for polygon in polygons:
         polygon = np.array(polygon)
         cv2.fillPoly(mask, [polygon], 1)
-        #visualize_mask(mask)
     print('\033[31m' + 'Polygon mask with all polygons is created! ' + '\033[0m')
     return mask
 
-
-def evaluate_annotation(df: pd.DataFrame, which_image: int, image_path: str, output_path: str):
-    import numpy as np
+def evaluate_annotation(df: pd.DataFrame, which_image: int, image_path: str, output_path: str = None):
 
     all_columns = df.columns
     desired_columns = [col for col in all_columns if "ImageAnnotations" in col and str(which_image) in col]
@@ -167,19 +156,23 @@ def evaluate_annotation(df: pd.DataFrame, which_image: int, image_path: str, out
     visualize_mask(average_mask, image_path, df.shape[0], output_path)
 
 
+
 if __name__ == '__main__':
     # ------------------ Evaluate the Image Selection Task ------------------
-    which_image = 0
-    image_idxs = [27300, 27398, 27591, 27931, 28113, 28125, 28285, 28362, 28383, 28583, 28782, 28892, 29058, 29188, 29408, 29527, 29762]
-    output_path = f"/home/dai/GPU-Student-2/Cederic/DataSciPro/study/results/eval_selection/{image_idxs[which_image]}_selec.png"
-    user_selection_lst, image_selection_lst = evaluate_Selection(df)
-    plot_histogram(image_selection_lst, which_image, output_path)
+    #image_idxs = [27300, 27398, 27591, 27931, 28113, 28125, 28285, 28362, 28383, 28583, 28782, 28892, 29058, 29188, 29408, 29527, 29762]
+    #user_selection_lst, image_selection_lst = evaluate_Selection(df)
+    #for i in range(len(image_idxs)):
+    #    which_image = i
+    #    output_path = f"/home/dai/GPU-Student-2/Cederic/DataSciPro/study/results/eval_selection/{image_idxs[which_image]}_select.png"
+    #    plot_histogram(image_selection_lst, which_image, output_path)
 
-    ## ------------------ Evaluate the Annotation Task ------------------
-    #which_image = 0
-    #image_idxs = [27300, 27398, 27591, 27611, 27931, 28113, 28125, 28285, 28355, 28383, 28583, 28782, 28892, 29058, 29408, 29527, 29762]
-    #image_paths = [f'/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_gt1/{idx}_1.0_misclassified.png' for idx in image_idxs]
-    #output_path = f"/home/dai/GPU-Student-2/Cederic/DataSciPro/study/results/eval_annotation/{image_idxs[which_image]}_annot.png"
-    #evaluate_annotation(df, image_idxs[which_image], image_paths[which_image], output_path)
+    # ------------------ Evaluate the Annotation Task ------------------
+    image_idxs = [27300, 27398, 27591, 27611, 27931, 28113, 28125, 28285, 28355, 28383, 28583, 28782, 28892, 29058, 29408, 29527, 29762]
+    #for i in range(len(image_idxs)):
+    for i in range(3):
+        which_image = i
+        image_paths = [f'/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_gt1/{idx}_1.0_misclassified.png' for idx in image_idxs]
+        output_path = f"/home/dai/GPU-Student-2/Cederic/DataSciPro/study/results/eval_annotation/{image_idxs[which_image]}_annot.png"
+        evaluate_annotation(df, image_idxs[which_image], image_paths[which_image], output_path)
 
 
