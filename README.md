@@ -74,7 +74,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This project focuses on Diffusion Visual Counterfactual Explanations (DVCE) and Human Relevance Heatmaps (HRH). Developed during a master's data science project at the Technical University of Berlin, it aims to enhance the understanding of classifier decisions through visualization techniques.
+This project focuses on Diffusion Visual Counterfactual Explanations (DVCEs) and Human Relevance Heatmaps (HRHs). Developed during a master's data science project at the Technical University of Berlin, it aims to enhance the understanding of classifier decisions through visualization techniques.
 
 A key component of this project is a user study designed to evaluate visual counterfactual explanations from a human-centered perspective. This study aims to assess how effectively these explanations can be understood and interpreted by users.
 
@@ -88,6 +88,13 @@ Additionally, the project includes a model for smiling enhancement, which serves
 
 To get a local copy follow these simple steps.
 
+### Installation
+
+* clone the repo
+   ```sh
+   git clone https://github.com/cederican/DataSciPro.git
+   ```
+
 ### Prerequisites
 
 Create a conda environment using 
@@ -95,13 +102,6 @@ Create a conda environment using
   ```sh
   conda env create -f environment.yml
   ```
-
-### Installation
-
-* clone the repo
-   ```sh
-   git clone https://github.com/cederican/DataSciPro.git
-   ```
 
 ### Compute requirements
 
