@@ -45,7 +45,7 @@ def evaluate_Selection(df: pd.DataFrame):
 def plot_histogram(image_selection_lst, which_image, output_path):
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    num_bins =  range(min(image_selection_lst[which_image]), (max(image_selection_lst[which_image]))+2)
+    num_bins =  range(-1, (max(image_selection_lst[which_image]))+2)
     n, bins, patches = ax.hist(image_selection_lst[which_image], bins=num_bins, edgecolor='white', linewidth=1)
     # colour the bars
     for i, patch in enumerate(patches):
@@ -159,20 +159,20 @@ def evaluate_annotation(df: pd.DataFrame, which_image: int, image_path: str, out
 
 if __name__ == '__main__':
     # ------------------ Evaluate the Image Selection Task ------------------
-    #image_idxs = [27300, 27398, 27591, 27931, 28113, 28125, 28285, 28362, 28383, 28583, 28782, 28892, 29058, 29188, 29408, 29527, 29762]
-    #user_selection_lst, image_selection_lst = evaluate_Selection(df)
-    #for i in range(len(image_idxs)):
-    #    which_image = i
-    #    output_path = f"/home/dai/GPU-Student-2/Cederic/DataSciPro/study/results/eval_selection/{image_idxs[which_image]}_select.png"
-    #    plot_histogram(image_selection_lst, which_image, output_path)
+    image_idxs = [27300, 27398, 27591, 27931, 28113, 28125, 28285, 28362, 28383, 28583, 28782, 28892, 29058, 29188, 29408, 29527, 29762]
+    user_selection_lst, image_selection_lst = evaluate_Selection(df)
+    for i in range(len(image_idxs)):
+        which_image = i
+        output_path = f"/home/dai/GPU-Student-2/Cederic/DataSciPro/study/results/eval_selection/{image_idxs[which_image]}_select.png"
+        plot_histogram(image_selection_lst, which_image, output_path)
 
     # ------------------ Evaluate the Annotation Task ------------------
-    image_idxs = [27300, 27398, 27591, 27611, 27931, 28113, 28125, 28285, 28355, 28383, 28583, 28782, 28892, 29058, 29408, 29527, 29762]
-    #for i in range(len(image_idxs)):
-    for i in range(3):
-        which_image = i
-        image_paths = [f'/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_gt1/{idx}_1.0_misclassified.png' for idx in image_idxs]
-        output_path = f"/home/dai/GPU-Student-2/Cederic/DataSciPro/study/results/eval_annotation/{image_idxs[which_image]}_annot.png"
-        evaluate_annotation(df, image_idxs[which_image], image_paths[which_image], output_path)
+    #image_idxs = [27300, 27398, 27591, 27611, 27931, 28113, 28125, 28285, 28355, 28383, 28583, 28782, 28892, 29058, 29408, 29527, 29762]
+    ##for i in range(len(image_idxs)):
+    #for i in range(3):
+    #    which_image = i
+    #    image_paths = [f'/home/dai/GPU-Student-2/Cederic/DataSciPro/data/misclsData_gt1/{idx}_1.0_misclassified.png' for idx in image_idxs]
+    #    output_path = f"/home/dai/GPU-Student-2/Cederic/DataSciPro/study/results/eval_annotation/{image_idxs[which_image]}_annot.png"
+    #    evaluate_annotation(df, image_idxs[which_image], image_paths[which_image], output_path)
 
 

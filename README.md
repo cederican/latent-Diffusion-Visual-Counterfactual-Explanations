@@ -241,7 +241,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Cederic Aßmann - cederic.assmann@icloud.com
 
-Project Link: [https://github.com/cederican/DataSciPro](https://github.com/cederican/DataSciPro)
+Project Link: [https://github.com/cederican/Diffusion-Visual-Counterfactual-Explanations](https://github.com/cederican/Diffusion-Visual-Counterfactual-Explanations)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -264,6 +264,6 @@ Helpful projects and pretrained models used in the project
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
-[license-url]: /Users/cedimac/DataScPro/EvalStudy/LICENSE.txt
+[license-url]: LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/cederic-aßmann-41904322b/
