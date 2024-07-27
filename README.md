@@ -30,7 +30,7 @@
     <img src="logos/headlineImage.png" alt="Logo" width="576" height="241">
   </a>
 
-  <h3 align="center">Diffusion Visual Counterfactual Explanations <br> & <br> Human Relevance Heatmaps</h3>
+  <h3 align="center">latent Diffusion Visual Counterfactual Explanations <br> & <br> Human Relevance Heatmaps</h3>
 
   <p align="center">
     <br />
@@ -74,7 +74,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This project focuses on Diffusion Visual Counterfactual Explanations (DVCEs) and Human Relevance Heatmaps (HRHs). Developed during a master's data science project at the Technical University of Berlin, it aims to enhance the understanding of classifier decisions through visualization techniques.
+This project focuses on latent Diffusion Visual Counterfactual Explanations (lDVCEs) and Human Relevance Heatmaps (HRHs). Developed during a master's data science project at the Technical University of Berlin, it aims to enhance the understanding of classifier decisions through visualization techniques.
 
 A key component of this project is a user study designed to evaluate visual counterfactual explanations from a human-centered perspective. This study aims to assess how effectively these explanations can be understood and interpreted by users.
 
@@ -92,7 +92,7 @@ To get a local copy follow these simple steps.
 
 * clone the repo
    ```sh
-   git clone https://github.com/cederican/Diffusion-Visual-Counterfactual-Explanations.git
+   git clone https://github.com/cederican/latent-Diffusion-Visual-Counterfactual-Explanations.git
    ```
 
 ### Prerequisites
@@ -217,7 +217,7 @@ Some results from both tasks of the user study are provided here and the script 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-The model enables you to create DVCEs and the corresponding LRP heatmaps. Some examples are shown here and compared to the human created human relevance heatmaps.
+The model enables you to create lDVCEs and the corresponding LRP heatmaps. Some examples are shown here and compared to the human created human relevance heatmaps.
 
 ![Example Outputs](logos/usage_images.png)
 
@@ -241,7 +241,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Cederic Aßmann - cederic.assmann@icloud.com
 
-Project Link: [https://github.com/cederican/Diffusion-Visual-Counterfactual-Explanations](https://github.com/cederican/Diffusion-Visual-Counterfactual-Explanations)
+Project Link: [https://github.com/cederican/latent-Diffusion-Visual-Counterfactual-Explanations](https://github.com/cederican/latent-Diffusion-Visual-Counterfactual-Explanations)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
