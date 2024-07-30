@@ -27,7 +27,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/othneildrew/Best-README-Template">
-    <img src="logos/headlineImage.png" alt="Logo" width="576" height="241">
+    <img src="logos/headline.png" alt="Logo" width="576" height="241">
   </a>
 
   <h3 align="center">latent Diffusion Visual Counterfactual Explanations <br> & <br> Human Relevance Heatmaps</h3>
