@@ -221,8 +221,6 @@ The model enables you to create lDVCEs and the corresponding LRP heatmaps. Some 
 
 ![Example Outputs](logos/usage_images.png)
 
-_For more examples, please refer to the [Link to the Paper](https://example.com)_
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
